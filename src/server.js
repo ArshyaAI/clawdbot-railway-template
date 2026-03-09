@@ -895,7 +895,10 @@ app.post("/setup/api/run", requireSetupAuth, async (req, res) => {
   });
   } catch (err) {
     console.error("[/setup/api/run] error:", err);
-    return respondJson(500, { ok: false, output: `Internal error: ${String(err)}` });
+    if (!res.writableEnded && !res.headersSent) {
+      return res.status(500).json({ ok: false, output: `Internal error: ${String(err)}` });
+    }
+    return undefined;
   }
 });
 
