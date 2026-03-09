@@ -40,6 +40,8 @@ const WORKSPACE_DIR =
   process.env.OPENCLAW_WORKSPACE_DIR?.trim() ||
   path.join(STATE_DIR, "workspace");
 
+const CONFIG_AUDIT_LOG_PATH = path.join(STATE_DIR, 'audit', 'config-ops.jsonl');
+
 // Protect /setup with a user-provided password.
 const SETUP_PASSWORD = process.env.SETUP_PASSWORD?.trim();
 
