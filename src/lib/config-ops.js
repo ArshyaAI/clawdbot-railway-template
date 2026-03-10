@@ -126,7 +126,11 @@ export function buildMutationRequest(change) {
 }
 
 export async function fetchCurrentConfigState(options = {}) {
-  return await runGatewayJsonCommand(buildGatewayCallArgs('config.get', {}), options);
+  const snapshot = await runGatewayJsonCommand(buildGatewayCallArgs('config.get', {}), options);
+  return {
+    ...snapshot,
+    payload: snapshot?.config ?? snapshot?.resolved ?? snapshot?.parsed ?? snapshot?.payload ?? {},
+  };
 }
 
 export async function runConfigMutation({ change, note, sessionKey, restartDelayMs }, options = {}) {

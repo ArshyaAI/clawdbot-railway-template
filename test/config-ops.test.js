@@ -26,6 +26,7 @@ test('fetchCurrentConfigState parses gateway call json output', async () => {
     },
   });
   assert.equal(state.hash, 'base123');
+  assert.deepEqual(state.payload, { agents: { list: [] } });
   assert.deepEqual(state.config, { agents: { list: [] } });
 });
 
