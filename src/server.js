@@ -1140,6 +1140,8 @@ app.post(
 
       try {
         const gatewayStatus = await getGatewayStatusProbe({
+          attempts: 3,
+          delayMs: 5000,
           runCmd,
           openclawNode: OPENCLAW_NODE,
           clawArgs,
@@ -1151,6 +1153,8 @@ app.post(
 
       try {
         const channelsProbe = await getChannelsProbe({
+          attempts: 3,
+          delayMs: 5000,
           runCmd,
           openclawNode: OPENCLAW_NODE,
           clawArgs,
