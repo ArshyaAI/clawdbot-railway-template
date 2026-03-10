@@ -55,14 +55,19 @@ export async function getGatewayStatusProbe(options = {}) {
   let lastError;
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     const result = await runCmd(cmd, args);
-    if (result.code === 0) {
+    try {
       const parsed = parseJsonOutput(result.output);
-      return {
-        ok: Boolean(parsed?.ok ?? parsed?.rpc?.ok),
-        raw: parsed,
-      };
+      const ok = Boolean(parsed?.ok ?? parsed?.rpc?.ok);
+      if (ok || result.code === 0) {
+        return {
+          ok,
+          raw: parsed,
+        };
+      }
+      lastError = new Error(String(result.output || 'gateway status failed').trim());
+    } catch {
+      lastError = new Error(String(result.output || 'gateway status failed').trim());
     }
-    lastError = new Error(String(result.output || 'gateway status failed').trim());
     if (attempt < attempts - 1) {
       await sleepImpl(delayMs);
     }

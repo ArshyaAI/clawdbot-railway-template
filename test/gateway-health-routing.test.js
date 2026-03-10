@@ -46,7 +46,7 @@ test('getGatewayStatusProbe reads gateway status json', async () => {
   const result = await getGatewayStatusProbe({
     runCmd: async (_cmd, args) => {
       assert.deepEqual(args, ['gateway', 'status', '--json']);
-      return { code: 0, output: JSON.stringify({ rpc: { ok: true }, targets: [{ health: { ok: true } }] }) };
+      return { code: 1, output: JSON.stringify({ rpc: { ok: true }, targets: [{ health: { ok: true } }] }) };
     },
   });
   assert.equal(result.ok, true);
