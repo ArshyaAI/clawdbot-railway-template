@@ -13,11 +13,14 @@ function routeWindow(marker, length = 1200) {
   return src.slice(idx, idx + length);
 }
 
-// (a) POST /setup/api/config/raw returns 410 with GONE code (config writes disabled)
+// (a) POST /setup/api/config/raw returns 410 (config writes disabled via handler)
 test("config apply: POST /setup/api/config/raw returns 410 with GONE code", () => {
   const window = routeWindow('app.post("/setup/api/config/raw"');
-  assert.match(window, /respondGone\(/);
-  assert.match(window, /Raw config writes disabled/);
+  // Upstream refactored: may use createRawConfigWriteDisabledHandler() or inline respondGone
+  assert.ok(
+    /respondGone\(/.test(window) || /createRawConfigWriteDisabledHandler/.test(window),
+    "route should use respondGone or createRawConfigWriteDisabledHandler"
+  );
 });
 
 // (b) GET /setup/api/config/raw exists and returns JSON with path + content
