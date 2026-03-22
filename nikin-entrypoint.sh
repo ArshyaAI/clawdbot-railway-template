@@ -27,25 +27,24 @@ echo "[nikin-entrypoint] WORKSPACE_DIR=$WORKSPACE_DIR"
 mkdir -p "$STATE_DIR/tools"
 mkdir -p "$WORKSPACE_DIR/nikin-assistant/skills"
 
-# ── Config: prefer runtime config, fall back to onboarding, then template ────
-# Priority: 1) existing runtime config  2) onboarding config  3) template
-ONBOARD_CONFIG="$HOME/.openclaw/openclaw.json"
+# ── Config: select template by NIKIN_CONFIG_PROFILE, seed only if absent ──────
+PROFILE="${NIKIN_CONFIG_PROFILE:-default}"
+echo "[nikin-entrypoint] Config profile: $PROFILE"
+
 if [ -f "$STATE_DIR/openclaw.json" ]; then
-  # Check if it's our template (has nikin-assistant agent) vs runtime config
-  if grep -q '"nikin-assistant"' "$STATE_DIR/openclaw.json" 2>/dev/null && \
-     [ -f "$ONBOARD_CONFIG" ]; then
-    echo "[nikin-entrypoint] Template config detected — restoring onboarding config"
-    cp "$ONBOARD_CONFIG" "$STATE_DIR/openclaw.json"
-    echo "[nikin-entrypoint] Restored from $ONBOARD_CONFIG"
-  else
-    echo "[nikin-entrypoint] Config exists — preserving runtime config"
-  fi
-elif [ -f "$ONBOARD_CONFIG" ]; then
-  echo "[nikin-entrypoint] No config in state dir — copying onboarding config"
-  cp "$ONBOARD_CONFIG" "$STATE_DIR/openclaw.json"
+  echo "[nikin-entrypoint] Config exists — preserving runtime config"
 else
-  echo "[nikin-entrypoint] No config found — rendering from template..."
-  envsubst < "$INIT_DIR/openclaw.config.jsonc.tmpl" > "$STATE_DIR/openclaw.json"
+  case "$PROFILE" in
+    arshya)
+      TMPL="$INIT_DIR/openclaw.config.arshya.json"
+      echo "[nikin-entrypoint] Seeding from arshya template (March 7 treebot)..."
+      ;;
+    *)
+      TMPL="$INIT_DIR/openclaw.config.jsonc.tmpl"
+      echo "[nikin-entrypoint] Seeding from default template..."
+      ;;
+  esac
+  envsubst < "$TMPL" > "$STATE_DIR/openclaw.json"
   echo "[nikin-entrypoint] Config written to $STATE_DIR/openclaw.json"
 fi
 

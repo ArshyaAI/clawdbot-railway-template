@@ -1,0 +1,244 @@
+{
+  "meta": {
+    "lastTouchedVersion": "2026.3.2",
+    "lastTouchedAt": "2026-03-22T22:00:00.000Z"
+  },
+  "wizard": {
+    "lastRunAt": "2026-03-05T13:00:05.892Z",
+    "lastRunVersion": "2026.2.9",
+    "lastRunCommand": "doctor",
+    "lastRunMode": "local"
+  },
+  "auth": {
+    "profiles": {
+      "google:default": {
+        "provider": "google",
+        "mode": "api_key"
+      },
+      "anthropic:manual": {
+        "provider": "anthropic",
+        "mode": "token"
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "anthropic/claude-opus-4-6"
+      },
+      "workspace": "/data/workspace",
+      "contextPruning": {
+        "mode": "cache-ttl",
+        "ttl": "1h"
+      },
+      "compaction": {
+        "mode": "safeguard"
+      },
+      "heartbeat": {
+        "every": "1h",
+        "activeHours": {
+          "start": "07:00",
+          "end": "22:00"
+        },
+        "target": "last"
+      },
+      "maxConcurrent": 4,
+      "subagents": {
+        "maxConcurrent": 8
+      }
+    },
+    "list": [
+      {
+        "id": "main",
+        "name": "Main",
+        "workspace": "/data/workspace"
+      },
+      {
+        "id": "treebot",
+        "name": "Treebot",
+        "workspace": "/data/workspace/agents/treebot",
+        "identity": {
+          "name": "Treebot",
+          "emoji": "\ud83c\udf33"
+        },
+        "tools": {
+          "profile": "messaging",
+          "alsoAllow": [
+            "read",
+            "write",
+            "web_search",
+            "web_fetch",
+            "image",
+            "tts",
+            "session_status",
+            "sessions_send",
+            "composio",
+            "exec",
+            "process",
+            "sessions_spawn",
+            "subagents"
+          ],
+          "deny": [
+            "edit",
+            "apply_patch",
+            "group:automation",
+            "group:ui",
+            "group:nodes",
+            "agents_list",
+            "gateway"
+          ],
+          "exec": {
+            "security": "allowlist",
+            "ask": "off",
+            "pathPrepend": [
+              "/data/npm/bin"
+            ],
+            "safeBins": [
+              "jq",
+              "head",
+              "tail",
+              "wc",
+              "cut",
+              "tr",
+              "uniq",
+              "grep",
+              "sort",
+              "cat",
+              "ls"
+            ]
+          },
+          "fs": {
+            "workspaceOnly": false
+          }
+        },
+        "subagents": {
+          "model": "anthropic/claude-sonnet-4-20250514",
+          "maxConcurrent": 3,
+          "runTimeoutSeconds": 600
+        }
+      }
+    ]
+  },
+  "tools": {
+    "sessions": {
+      "visibility": "all"
+    },
+    "agentToAgent": {
+      "enabled": true
+    }
+  },
+  "bindings": [
+    {
+      "agentId": "main",
+      "match": {
+        "channel": "telegram",
+        "peer": {
+          "kind": "direct",
+          "id": "422412426"
+        }
+      }
+    },
+    {
+      "agentId": "treebot",
+      "match": {
+        "channel": "telegram"
+      }
+    }
+  ],
+  "messages": {
+    "ackReactionScope": "group-mentions"
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto",
+    "restart": true,
+    "ownerDisplay": "raw"
+  },
+  "session": {
+    "dmScope": "per-channel-peer"
+  },
+  "hooks": {
+    "internal": {
+      "enabled": true,
+      "entries": {
+        "boot-md": {
+          "enabled": true
+        },
+        "command-logger": {
+          "enabled": true
+        },
+        "session-memory": {
+          "enabled": true
+        }
+      }
+    }
+  },
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "customCommands": [
+        {
+          "command": "start",
+          "description": "Chat starten \ud83c\udf33"
+        }
+      ],
+      "dmPolicy": "allowlist",
+      "botToken": "${TELEGRAM_BOT_TOKEN}",
+      "allowFrom": [
+        "422412426",
+        "8321735664",
+        "1227926889"
+      ],
+      "groupPolicy": "allowlist",
+      "streaming": "partial"
+    }
+  },
+  "gateway": {
+    "port": 18789,
+    "mode": "local",
+    "bind": "loopback",
+    "controlUi": {
+      "dangerouslyAllowHostHeaderOriginFallback": true
+    },
+    "auth": {
+      "mode": "token",
+      "token": "${CLAWDBOT_GATEWAY_TOKEN}"
+    },
+    "trustedProxies": [
+      "127.0.0.1"
+    ],
+    "tailscale": {
+      "mode": "off",
+      "resetOnExit": false
+    },
+    "remote": {
+      "token": "${CLAWDBOT_GATEWAY_TOKEN}"
+    }
+  },
+  "skills": {
+    "install": {
+      "nodeManager": "npm"
+    }
+  },
+  "plugins": {
+    "allow": [
+      "composio",
+      "telegram",
+      "memory-core"
+    ],
+    "entries": {
+      "telegram": {
+        "enabled": true
+      },
+      "composio": {
+        "enabled": true,
+        "config": {
+          "consumerKey": "${COMPOSIO_CONSUMER_KEY}"
+        }
+      },
+      "memory-core": {
+        "enabled": true
+      }
+    }
+  }
+}
