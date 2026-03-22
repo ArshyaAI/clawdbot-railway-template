@@ -13,6 +13,7 @@
 {
   // ─── Gateway ────────────────────────────────────────────────────────────────
   "gateway": {
+    "mode": "local",
     "auth": {
       "mode": "password",
       "password": "${SETUP_PASSWORD}"
@@ -102,7 +103,14 @@
                 "maxPositional": 0,
                 "allowedValueFlags": ["--regexp", "--max-count", "--after-context", "--before-context", "--context", "-e", "-m", "-A", "-B", "-C"],
                 "deniedFlags": ["--file", "--exclude-from", "--recursive", "-f", "-r", "-R"]
-              }
+              },
+              "cat":  { "maxPositional": 5 },
+              "head": { "maxPositional": 1, "allowedValueFlags": ["-n"] },
+              "tail": { "maxPositional": 1, "allowedValueFlags": ["-n"] },
+              "sort": { "maxPositional": 1, "allowedValueFlags": ["-t", "-k"] },
+              "cut":  { "maxPositional": 0, "allowedValueFlags": ["-d", "-f", "-c"] },
+              "wc":   { "maxPositional": 5 },
+              "tr":   { "maxPositional": 2 }
             }
           }
         }
