@@ -1276,6 +1276,10 @@ const ALLOWED_CONSOLE_COMMANDS = new Set([
   // Plugin management
   "openclaw.plugins.list",
   "openclaw.plugins.enable",
+
+  // Cron management
+  "openclaw.cron.list",
+  "openclaw.cron.add",
 ]);
 
 const DISABLED_SETUP_CONSOLE_COMMANDS = new Set([
@@ -1428,6 +1432,44 @@ app.post("/setup/api/console/run", requireSetupAuth, async (req, res) => {
         OPENCLAW_NODE,
         clawArgs(["plugins", "enable", name]),
       );
+      return res
+        .status(r.code === 0 ? 200 : 500)
+        .json({ ok: r.code === 0, output: redactSecrets(r.output) });
+    }
+
+    // Cron management commands
+    if (cmd === "openclaw.cron.list") {
+      const r = await runCmd(
+        OPENCLAW_NODE,
+        clawArgs(["cron", "list", "--json"]),
+      );
+      return res
+        .status(r.code === 0 ? 200 : 500)
+        .json({ ok: r.code === 0, output: redactSecrets(r.output) });
+    }
+    if (cmd === "openclaw.cron.add") {
+      // arg is a JSON string with cron job params
+      // e.g. {"name":"morning-briefing","cron":"0 6 * * *","tz":"Europe/Zurich","agent":"nikin-assistant","message":"...","announce":true}
+      let params;
+      try {
+        params = JSON.parse(arg);
+      } catch {
+        return res
+          .status(400)
+          .json({
+            ok: false,
+            error: "arg must be valid JSON with cron job params",
+          });
+      }
+      const cronArgs = ["cron", "add"];
+      if (params.name) cronArgs.push("--name", String(params.name));
+      if (params.cron) cronArgs.push("--cron", String(params.cron));
+      if (params.every) cronArgs.push("--every", String(params.every));
+      if (params.tz) cronArgs.push("--tz", String(params.tz));
+      if (params.agent) cronArgs.push("--agent", String(params.agent));
+      if (params.message) cronArgs.push("--message", String(params.message));
+      if (params.announce) cronArgs.push("--announce");
+      const r = await runCmd(OPENCLAW_NODE, clawArgs(cronArgs));
       return res
         .status(r.code === 0 ? 200 : 500)
         .json({ ok: r.code === 0, output: redactSecrets(r.output) });

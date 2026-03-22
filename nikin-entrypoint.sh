@@ -42,7 +42,22 @@ for f in "$INIT_DIR/tools/"*.json; do
 done
 
 # ── Seed workspace files (only if absent — preserves user data) ───────────────
-echo "[nikin-entrypoint] Seeding workspace skills..."
+echo "[nikin-entrypoint] Seeding workspace files..."
+
+# Seed agent root files (SOUL.md, etc.)
+for f in "$INIT_DIR/workspace/nikin-assistant/"*; do
+  [ -f "$f" ] || continue
+  fname=$(basename "$f")
+  dest="$WORKSPACE_DIR/nikin-assistant/$fname"
+  if [ ! -f "$dest" ]; then
+    cp "$f" "$dest"
+    echo "[nikin-entrypoint] Seeded: $dest"
+  else
+    echo "[nikin-entrypoint] Exists (skipped): $dest"
+  fi
+done
+
+# Seed skills subdirectory
 for f in "$INIT_DIR/workspace/nikin-assistant/skills/"*; do
   [ -f "$f" ] || continue
   fname=$(basename "$f")
