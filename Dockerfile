@@ -49,7 +49,6 @@ RUN apt-get update \
     tini \
     python3 \
     python3-venv \
-    gettext-base \
   && rm -rf /var/lib/apt/lists/*
 
 # `openclaw update` expects pnpm. Provide it in the runtime image.
@@ -79,12 +78,6 @@ RUN printf '%s\n' '#!/usr/bin/env bash' 'exec node /openclaw/dist/entry.js "$@"'
 
 COPY src ./src
 
-# NIKIN production config: templates + workspace seeds.
-# envsubst at container start renders ${VAR} references using Railway env vars.
-COPY nikin-config /etc/nikin-config
-COPY nikin-entrypoint.sh /usr/local/bin/nikin-entrypoint.sh
-RUN chmod +x /usr/local/bin/nikin-entrypoint.sh
-
 # The wrapper listens on $PORT.
 # IMPORTANT: Do not set a default PORT here.
 # Railway injects PORT at runtime and routes traffic to that port.
@@ -92,6 +85,5 @@ RUN chmod +x /usr/local/bin/nikin-entrypoint.sh
 EXPOSE 8080
 
 # Ensure PID 1 reaps zombies and forwards signals.
-# nikin-entrypoint.sh seeds config/tools/workspace then execs the original CMD.
-ENTRYPOINT ["tini", "--", "/usr/local/bin/nikin-entrypoint.sh"]
+ENTRYPOINT ["tini", "--"]
 CMD ["node", "src/server.js"]
