@@ -20,7 +20,7 @@
     },
 
     "controlUi": {
-      "dangerouslyAllowHostHeaderOriginFallback": false,
+      "dangerouslyAllowHostHeaderOriginFallback": true,
       "allowInsecureAuth": false
     }
   },
@@ -157,7 +157,8 @@
       "webhookSecret": "${TELEGRAM_WEBHOOK_SECRET}",
       "streaming": "off",
       "reactionLevel": "ack",
-      "dmPolicy": "pairing",
+      "dmPolicy": "open",
+      "allowFrom": ["*"],
       "retry": {
         "attempts": 3,
         "minDelayMs": 400,
