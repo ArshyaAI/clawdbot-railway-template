@@ -27,10 +27,27 @@ echo "[nikin-entrypoint] WORKSPACE_DIR=$WORKSPACE_DIR"
 mkdir -p "$STATE_DIR/tools"
 mkdir -p "$WORKSPACE_DIR/nikin-assistant/skills"
 
-# ── Render config template → openclaw.json ───────────────────────────────────
-echo "[nikin-entrypoint] Rendering config template..."
-envsubst < "$INIT_DIR/openclaw.config.jsonc.tmpl" > "$STATE_DIR/openclaw.json"
-echo "[nikin-entrypoint] Config written to $STATE_DIR/openclaw.json"
+# ── Config: prefer runtime config, fall back to onboarding, then template ────
+# Priority: 1) existing runtime config  2) onboarding config  3) template
+ONBOARD_CONFIG="$HOME/.openclaw/openclaw.json"
+if [ -f "$STATE_DIR/openclaw.json" ]; then
+  # Check if it's our template (has nikin-assistant agent) vs runtime config
+  if grep -q '"nikin-assistant"' "$STATE_DIR/openclaw.json" 2>/dev/null && \
+     [ -f "$ONBOARD_CONFIG" ]; then
+    echo "[nikin-entrypoint] Template config detected — restoring onboarding config"
+    cp "$ONBOARD_CONFIG" "$STATE_DIR/openclaw.json"
+    echo "[nikin-entrypoint] Restored from $ONBOARD_CONFIG"
+  else
+    echo "[nikin-entrypoint] Config exists — preserving runtime config"
+  fi
+elif [ -f "$ONBOARD_CONFIG" ]; then
+  echo "[nikin-entrypoint] No config in state dir — copying onboarding config"
+  cp "$ONBOARD_CONFIG" "$STATE_DIR/openclaw.json"
+else
+  echo "[nikin-entrypoint] No config found — rendering from template..."
+  envsubst < "$INIT_DIR/openclaw.config.jsonc.tmpl" > "$STATE_DIR/openclaw.json"
+  echo "[nikin-entrypoint] Config written to $STATE_DIR/openclaw.json"
+fi
 
 # ── Render tool definitions (envsubst replaces CONNECTOS_URL, CONNECTOS_TOKEN) ──
 echo "[nikin-entrypoint] Seeding tool definitions..."
