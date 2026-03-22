@@ -50,8 +50,6 @@
         "model": "anthropic/claude-sonnet-4-6",
         "workspace": "${OPENCLAW_WORKSPACE_DIR}/nikin-assistant",
 
-        "systemPrompt": "You are the NIKIN AI assistant for Nicholas Mayer. Your primary job is delivering the daily ConnectOS morning briefing via Telegram every morning at 06:00 Europe/Zurich. When Nicholas messages you directly, answer helpfully. Use sub-agents for deep domain tasks (content, sustainability, analytics, ops, support). For briefings, follow skills/connectos-briefing.md exactly.",
-
         "subagents": {
           "model": "anthropic/claude-haiku-4-5",
           "allowAgents": [
@@ -151,8 +149,7 @@
       "webhookSecret": "${TELEGRAM_WEBHOOK_SECRET}",
       "streaming": "off",
       "reactionLevel": "ack",
-      "dmPolicy": "allowlist",
-      "allowFrom": ["${TELEGRAM_NICHOLAS_CHAT_ID}"],
+      "dmPolicy": "pairing",
       "retry": {
         "attempts": 3,
         "minDelayMs": 400,
@@ -188,18 +185,8 @@
   ],
 
   // ─── Cron ───────────────────────────────────────────────────────────────────
-  "cron": [
-    {
-      "id": "morning-briefing",
-      "schedule": "0 6 * * *",
-      "timezone": "Europe/Zurich",
-      "description": "Daily morning briefing at 06:00 CET — delivers ConnectOS summary to Nicholas via Telegram.",
-      "action": {
-        "type": "agentTurn",
-        "agentId": "nikin-assistant",
-        "message": "Run the daily morning briefing. Follow skills/connectos-briefing.md to fetch data from ConnectOS, format the briefing, and deliver it.",
-        "delivery": "announce"
-      }
-    }
-  ]
+  // Cron settings only — jobs are registered via `openclaw cron add`, not inline.
+  "cron": {
+    "enabled": true
+  }
 }
