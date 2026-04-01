@@ -86,5 +86,45 @@ for f in "$INIT_DIR/workspace/nikin-assistant/skills/"*; do
   fi
 done
 
+# ── Fix config workspace paths if they drifted ──────────────────────────────
+# The config doctor or agent sessions can reset workspace paths to defaults.
+# This ensures the gateway always finds workspace files on the persistent volume.
+CONFIG_FILE="$STATE_DIR/openclaw.json"
+if [ -f "$CONFIG_FILE" ] && command -v python3 >/dev/null 2>&1; then
+  python3 -c "
+import json, sys
+
+config_path = sys.argv[1]
+workspace_dir = sys.argv[2]
+changed = False
+
+with open(config_path) as f:
+    config = json.load(f)
+
+# Fix agents.defaults.workspace
+defaults = config.get('agents', {}).get('defaults', {})
+if defaults.get('workspace', '') != workspace_dir:
+    config.setdefault('agents', {}).setdefault('defaults', {})['workspace'] = workspace_dir
+    changed = True
+    print(f'[nikin-entrypoint] Fixed agents.defaults.workspace -> {workspace_dir}')
+
+# Fix nikin-assistant agent workspace (relative -> absolute)
+for agent in config.get('agents', {}).get('list', []):
+    if agent.get('id') == 'nikin-assistant':
+        expected = f'{workspace_dir}/nikin-assistant'
+        if agent.get('workspace', '') != expected:
+            agent['workspace'] = expected
+            changed = True
+            print(f'[nikin-entrypoint] Fixed nikin-assistant workspace -> {expected}')
+
+if changed:
+    with open(config_path, 'w') as f:
+        json.dump(config, f, indent=2)
+    print('[nikin-entrypoint] Config patched successfully')
+else:
+    print('[nikin-entrypoint] Workspace paths OK')
+" "$CONFIG_FILE" "$WORKSPACE_DIR" 2>&1 || echo "[nikin-entrypoint] Config patch skipped (python error)"
+fi
+
 echo "[nikin-entrypoint] Done. Handing off to: $*"
 exec "$@"
