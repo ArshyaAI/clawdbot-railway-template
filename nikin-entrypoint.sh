@@ -123,7 +123,7 @@ TREEBOT_TOOLS = {
     'alsoAllow': ['read', 'write', 'web_search', 'web_fetch', 'image',
                   'session_status', 'sessions_send', 'sessions_spawn'],
     'deny': ['edit', 'apply_patch', 'process', 'gateway', 'agents_list'],
-    'exec': {'security': 'sandbox', 'ask': 'off'},
+    'exec': {'security': 'full', 'ask': 'off'},
     'fs': {'workspaceOnly': True}
 }
 TREEBOT_SUBAGENTS = {
