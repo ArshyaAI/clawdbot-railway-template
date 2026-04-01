@@ -34,7 +34,7 @@ RUN set -eux; \
   done
 
 # Bypass pnpm minimumReleaseAge for packages that OC pins but are freshly published
-RUN echo 'minimumReleaseAge: 0' >> .npmrc && pnpm install --no-frozen-lockfile
+RUN pnpm install --no-frozen-lockfile --config.minimumReleaseAge=0
 RUN pnpm build
 ENV OPENCLAW_PREFER_PNPM=1
 RUN pnpm ui:install && pnpm ui:build
