@@ -49,8 +49,10 @@ RUN apt-get update \
     ca-certificates \
     tini \
     python3 \
+    python3-pip \
     python3-venv \
     gettext-base \
+  && pip3 install --break-system-packages duckdb \
   && rm -rf /var/lib/apt/lists/*
 
 # `openclaw update` expects pnpm. Provide it in the runtime image.
