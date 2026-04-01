@@ -117,14 +117,6 @@ for agent in config.get('agents', {}).get('list', []):
             changed = True
             print(f'[nikin-entrypoint] Fixed nikin-assistant workspace -> {expected}')
 
-# Ensure treebot has explicit model (workaround for LiveSessionModelSwitchError in cron)
-for agent in config.get('agents', {}).get('list', []):
-    if agent.get('id') == 'treebot' and 'model' not in agent:
-        primary = config.get('agents', {}).get('defaults', {}).get('model', {}).get('primary', 'anthropic/claude-opus-4-6')
-        agent['model'] = primary
-        changed = True
-        print(f'[nikin-entrypoint] Set treebot model -> {primary}')
-
 if changed:
     with open(config_path, 'w') as f:
         json.dump(config, f, indent=2)

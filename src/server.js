@@ -284,7 +284,9 @@ async function ensureGatewayRunning() {
       try {
         lastGatewayError = null;
         await startGateway();
-        const ready = await waitForGatewayReady({ timeoutMs: 20_000 });
+        // WORKAROUND: OC v2026.3.28+ gateway init takes >20s (IPv4 fallback, bonjour, model-provider bootstrap).
+        // 60s accommodates cold starts. Remove/reduce after gateway startup is optimized upstream.
+        const ready = await waitForGatewayReady({ timeoutMs: 60_000 });
         if (!ready) {
           throw new Error("Gateway did not become ready in time");
         }
@@ -1454,12 +1456,10 @@ app.post("/setup/api/console/run", requireSetupAuth, async (req, res) => {
       try {
         params = JSON.parse(arg);
       } catch {
-        return res
-          .status(400)
-          .json({
-            ok: false,
-            error: "arg must be valid JSON with cron job params",
-          });
+        return res.status(400).json({
+          ok: false,
+          error: "arg must be valid JSON with cron job params",
+        });
       }
       const cronArgs = ["cron", "add"];
       if (params.name) cronArgs.push("--name", String(params.name));
