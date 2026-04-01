@@ -117,6 +117,40 @@ for agent in config.get('agents', {}).get('list', []):
             changed = True
             print(f'[nikin-entrypoint] Fixed nikin-assistant workspace -> {expected}')
 
+# Ensure treebot has guardrails (sandbox exec, workspace-only FS, deny dangerous tools)
+TREEBOT_TOOLS = {
+    'profile': 'messaging',
+    'alsoAllow': ['read', 'write', 'web_search', 'web_fetch', 'image',
+                  'session_status', 'sessions_send', 'sessions_spawn'],
+    'deny': ['edit', 'apply_patch', 'process', 'gateway', 'agents_list'],
+    'exec': {'security': 'sandbox', 'ask': 'off'},
+    'fs': {'workspaceOnly': True}
+}
+TREEBOT_SUBAGENTS = {
+    'allowAgents': ['nikin-content', 'nikin-sustainability',
+                    'nikin-analytics', 'nikin-ops', 'nikin-support']
+}
+for agent in config.get('agents', {}).get('list', []):
+    if agent.get('id') == 'treebot':
+        if agent.get('tools') != TREEBOT_TOOLS or agent.get('subagents') != TREEBOT_SUBAGENTS:
+            agent['tools'] = TREEBOT_TOOLS
+            agent['subagents'] = TREEBOT_SUBAGENTS
+            changed = True
+            print('[nikin-entrypoint] Applied treebot guardrails (sandbox exec, deny dangerous, workspaceOnly)')
+
+# Remove stale google-gemini-cli-auth from plugins.allow (config doctor removes it every boot anyway)
+plugins = config.get('plugins', {})
+allow = plugins.get('allow', [])
+if 'google-gemini-cli-auth' in allow:
+    allow.remove('google-gemini-cli-auth')
+    changed = True
+    print('[nikin-entrypoint] Removed stale google-gemini-cli-auth from plugins.allow')
+entries = plugins.get('entries', {})
+if 'google-gemini-cli-auth' in entries:
+    del entries['google-gemini-cli-auth']
+    changed = True
+    print('[nikin-entrypoint] Removed stale google-gemini-cli-auth from plugins.entries')
+
 if changed:
     with open(config_path, 'w') as f:
         json.dump(config, f, indent=2)
