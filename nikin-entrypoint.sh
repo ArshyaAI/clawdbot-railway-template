@@ -117,13 +117,27 @@ for agent in config.get('agents', {}).get('list', []):
             changed = True
             print(f'[nikin-entrypoint] Fixed nikin-assistant workspace -> {expected}')
 
-# Ensure treebot has guardrails (sandbox exec, workspace-only FS, deny dangerous tools)
+# Ensure treebot has guardrails (allowlist exec, workspace-only FS, deny dangerous tools)
+# Blocked: env/printenv (secret dump), curl/wget/nc (exfiltration), sh/bash (bypass),
+#          node/python3 (runtime escape), openclaw (config mutation)
 TREEBOT_TOOLS = {
     'profile': 'messaging',
     'alsoAllow': ['read', 'write', 'web_search', 'web_fetch', 'image',
                   'session_status', 'sessions_send', 'sessions_spawn'],
     'deny': ['edit', 'apply_patch', 'process', 'gateway', 'agents_list'],
-    'exec': {'security': 'full', 'ask': 'off'},
+    'exec': {
+        'security': 'allowlist',
+        'ask': 'off',
+        'pathPrepend': ['/data/npm/bin'],
+        'safeBins': [
+            'ctos', 'firecrawl',
+            'jq', 'grep', 'sort', 'uniq', 'head', 'tail', 'wc',
+            'cut', 'tr', 'sed', 'awk', 'paste', 'diff', 'comm',
+            'cat', 'ls', 'find', 'cp', 'mv', 'touch', 'mkdir',
+            'date', 'echo', 'printf', 'bc', 'sleep', 'basename',
+            'dirname', 'stat', 'file', 'tee'
+        ]
+    },
     'fs': {'workspaceOnly': True}
 }
 TREEBOT_SUBAGENTS = {
