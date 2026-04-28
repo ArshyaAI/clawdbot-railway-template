@@ -19,11 +19,13 @@ ENV PATH="/root/.bun/bin:${PATH}"
 RUN corepack enable
 
 WORKDIR /openclaw
+COPY scripts/patch-openclaw-channel-startup-registry.mjs /tmp/patch-openclaw-channel-startup-registry.mjs
 
 # Pin to a known-good ref (tag/branch). Override in Railway template settings if needed.
 # Using a released tag avoids build breakage when `main` temporarily references unpublished packages.
 ARG OPENCLAW_GIT_REF=v2026.2.9
 RUN git clone --depth 1 --branch "${OPENCLAW_GIT_REF}" https://github.com/openclaw/openclaw.git .
+RUN node /tmp/patch-openclaw-channel-startup-registry.mjs /openclaw "${OPENCLAW_GIT_REF}"
 
 # Patch: relax version requirements for packages that may reference unpublished versions.
 # Apply to all extension package.json files to handle workspace protocol (workspace:*).

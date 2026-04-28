@@ -11,6 +11,10 @@ test("Docker image pins bundled plugins to packaged dist tree", () => {
   );
   assert.match(
     dockerfile,
+    /RUN node \/tmp\/patch-openclaw-channel-startup-registry\.mjs \/openclaw "\$\{OPENCLAW_GIT_REF\}"/,
+  );
+  assert.match(
+    dockerfile,
     /ENV OPENCLAW_BUNDLED_PLUGINS_DIR=\/openclaw\/dist\/extensions/,
   );
 });
