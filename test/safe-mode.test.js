@@ -13,6 +13,12 @@ function routeWindow(marker, length = 1200) {
   return src.slice(idx, idx + length);
 }
 
+function routeWindowRegex(marker, length = 1200) {
+  const match = marker.exec(src);
+  assert.ok(match, `missing marker: ${marker}`);
+  return src.slice(match.index, match.index + length);
+}
+
 // (a) respondGone helper returns 410 with ok:false and code:"GONE"
 test("safe mode: respondGone returns 410 with structured error", () => {
   const window = routeWindow("function respondGone", 200);
@@ -24,12 +30,13 @@ test("safe mode: respondGone returns 410 with structured error", () => {
 // (b) All destructive routes use respondGone or equivalent disabled handler
 test("safe mode: all destructive routes return respondGone", () => {
   const destructiveRoutes = [
-    'app.post("/setup/api/config/raw"',
+    /app\.post\(\s*"\/setup\/api\/config\/raw"/,
     'app.post("/setup/import"',
     'app.post("/setup/api/reset"',
   ];
   for (const marker of destructiveRoutes) {
-    const window = routeWindow(marker, 300);
+    const window =
+      marker instanceof RegExp ? routeWindowRegex(marker, 300) : routeWindow(marker, 300);
     assert.ok(
       /respondGone\(/.test(window) || /create\w+DisabledHandler/.test(window),
       `${marker} should use respondGone or a disabled handler`

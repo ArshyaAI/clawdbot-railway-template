@@ -38,6 +38,9 @@ RUN pnpm install --no-frozen-lockfile --config.minimumReleaseAge=0
 RUN pnpm build
 ENV OPENCLAW_PREFER_PNPM=1
 RUN pnpm ui:install && pnpm ui:build
+# Fail the image build if a bundled channel entry was generated without the
+# runtime contract required by newer OpenClaw channel loading.
+RUN node scripts/test-built-bundled-channel-entry-smoke.mjs
 
 
 # Runtime image
@@ -66,6 +69,10 @@ ENV NPM_CONFIG_CACHE=/data/npm-cache
 ENV PNPM_HOME=/data/pnpm
 ENV PNPM_STORE_DIR=/data/pnpm-store
 ENV PATH="/data/npm/bin:/data/pnpm:${PATH}"
+# The image is built from a source checkout, so OpenClaw can otherwise prefer
+# dist-runtime wrappers. NIKIN production needs the packaged dist tree with
+# staged channel runtime deps for Telegram/OpenClaw v2026.4.26+.
+ENV OPENCLAW_BUNDLED_PLUGINS_DIR=/openclaw/dist/extensions
 
 WORKDIR /app
 
