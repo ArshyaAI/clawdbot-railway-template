@@ -13,9 +13,15 @@ function routeWindow(marker, length = 1200) {
   return src.slice(idx, idx + length);
 }
 
+function routeWindowRegex(marker, length = 1200) {
+  const match = marker.exec(src);
+  assert.ok(match, `missing marker: ${marker}`);
+  return src.slice(match.index, match.index + length);
+}
+
 // (a) POST /setup/api/config/raw returns 410 (config writes disabled via handler)
 test("config apply: POST /setup/api/config/raw returns 410 with GONE code", () => {
-  const window = routeWindow('app.post("/setup/api/config/raw"');
+  const window = routeWindowRegex(/app\.post\(\s*"\/setup\/api\/config\/raw"/);
   // Upstream refactored: may use createRawConfigWriteDisabledHandler() or inline respondGone
   assert.ok(
     /respondGone\(/.test(window) || /createRawConfigWriteDisabledHandler/.test(window),
@@ -63,7 +69,7 @@ test("config apply: /setup/api/run returns 200 with message when already configu
 
 // (g) Gateway start is deduped (gatewayStarting promise prevents concurrent starts)
 test("config apply edge: gateway start is deduplicated via gatewayStarting promise", () => {
-  const window = routeWindow("async function ensureGatewayRunning", 800);
+  const window = routeWindow("async function ensureGatewayRunning", 1400);
   assert.match(window, /gatewayStarting/);
   // If already starting, it awaits the existing promise instead of starting again
   assert.match(window, /if\s*\(\s*!gatewayStarting\s*\)/);

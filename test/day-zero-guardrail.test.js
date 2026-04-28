@@ -11,6 +11,12 @@ function routeWindow(marker, length = 900) {
   return src.slice(idx, idx + length);
 }
 
+function routeWindowRegex(marker, length = 900) {
+  const match = marker.exec(src);
+  assert.ok(match, `missing marker: ${marker}`);
+  return src.slice(match.index, match.index + length);
+}
+
 function helperWindow(marker, length = 240) {
   const idx = src.indexOf(marker);
   assert.ok(idx >= 0, `missing helper: ${marker}`);
@@ -19,7 +25,7 @@ function helperWindow(marker, length = 240) {
 
 test("setup raw config writes are disabled with a guarded apply message", () => {
   const helper = helperWindow("function respondGone");
-  const window = routeWindow('app.post("/setup/api/config/raw"');
+  const window = routeWindowRegex(/app\.post\(\s*"\/setup\/api\/config\/raw"/);
   assert.match(helper, /status\(410\)/);
   assert.match(applyRouteSrc, /function createRawConfigWriteDisabledHandler/);
   assert.match(applyRouteSrc, /Raw config writes disabled\. Use \/setup\/api\/config\/apply\./);

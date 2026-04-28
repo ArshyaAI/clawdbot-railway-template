@@ -69,6 +69,6 @@ test("audit log: doctor output is redacted and truncated to 50KB", () => {
 
 // (h) ensureGatewayRunning calls runDoctorBestEffort on failure
 test("audit log: ensureGatewayRunning collects diagnostics on failure", () => {
-  const window = routeWindow("async function ensureGatewayRunning", 800);
+  const window = routeWindow("async function ensureGatewayRunning", 1400);
   assert.match(window, /runDoctorBestEffort/);
 });
