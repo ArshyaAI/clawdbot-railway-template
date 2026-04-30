@@ -117,40 +117,74 @@ for agent in config.get('agents', {}).get('list', []):
             changed = True
             print(f'[nikin-entrypoint] Fixed nikin-assistant workspace -> {expected}')
 
-# Ensure treebot has guardrails (allowlist exec, workspace-only FS, deny dangerous tools)
-# Blocked: env/printenv (secret dump), curl/wget/nc (exfiltration), sh/bash (bypass),
-#          node/python3 (runtime escape), openclaw (config mutation)
-TREEBOT_TOOLS = {
-    'profile': 'messaging',
-    'alsoAllow': ['read', 'write', 'web_search', 'web_fetch', 'image',
-                  'session_status', 'sessions_send', 'sessions_spawn'],
-    'deny': ['edit', 'apply_patch', 'process', 'gateway', 'agents_list'],
-    'exec': {
-        'security': 'allowlist',
-        'ask': 'off',
-        'pathPrepend': ['/data/npm/bin'],
-        'safeBins': [
-            'ctos', 'firecrawl',
-            'jq', 'grep', 'sort', 'uniq', 'head', 'tail', 'wc',
-            'cut', 'tr', 'sed', 'awk', 'paste', 'diff', 'comm',
-            'cat', 'ls', 'find', 'cp', 'mv', 'touch', 'mkdir',
-            'date', 'echo', 'printf', 'bc', 'sleep', 'basename',
-            'dirname', 'stat', 'file', 'tee'
-        ]
-    },
-    'fs': {'workspaceOnly': True}
-}
+# Ensure treebot has guardrails and required tools without overwriting the
+# environment's exec posture. Production currently relies on full exec; staging
+# and production must not silently flip between full and allowlist during boot.
+TREEBOT_BASE_TOOLS = ['read', 'write', 'web_search', 'web_fetch', 'image',
+                      'session_status', 'sessions_send', 'sessions_spawn']
+TREEBOT_MEMORY_TOOLS = ['memory_add', 'memory_search', 'memory_get',
+                        'memory_list', 'memory_update', 'memory_delete',
+                        'memory_event_list', 'memory_event_status']
+TREEBOT_DENY = ['edit', 'apply_patch', 'process', 'gateway', 'agents_list']
 TREEBOT_SUBAGENTS = {
     'allowAgents': ['nikin-content', 'nikin-sustainability',
                     'nikin-analytics', 'nikin-ops', 'nikin-support']
 }
 for agent in config.get('agents', {}).get('list', []):
     if agent.get('id') == 'treebot':
-        if agent.get('tools') != TREEBOT_TOOLS or agent.get('subagents') != TREEBOT_SUBAGENTS:
-            agent['tools'] = TREEBOT_TOOLS
+        tools = agent.get('tools')
+        if not isinstance(tools, dict):
+            tools = {}
+            agent['tools'] = tools
+            changed = True
+            print('[nikin-entrypoint] Rebuilt treebot tools object')
+        if tools.get('profile') != 'messaging':
+            tools['profile'] = 'messaging'
             agent['subagents'] = TREEBOT_SUBAGENTS
             changed = True
-            print('[nikin-entrypoint] Applied treebot guardrails (sandbox exec, deny dangerous, workspaceOnly)')
+            print('[nikin-entrypoint] Fixed treebot tool profile -> messaging')
+
+        also_allow = tools.get('alsoAllow')
+        if not isinstance(also_allow, list):
+            also_allow = []
+            tools['alsoAllow'] = also_allow
+            changed = True
+        for tool_name in TREEBOT_BASE_TOOLS + TREEBOT_MEMORY_TOOLS:
+            if tool_name not in also_allow:
+                also_allow.append(tool_name)
+                changed = True
+                print(f'[nikin-entrypoint] Added treebot tool: {tool_name}')
+
+        deny = tools.get('deny')
+        if not isinstance(deny, list):
+            deny = []
+            tools['deny'] = deny
+            changed = True
+        for tool_name in TREEBOT_DENY:
+            if tool_name not in deny:
+                deny.append(tool_name)
+                changed = True
+                print(f'[nikin-entrypoint] Added treebot deny: {tool_name}')
+
+        if 'exec' not in tools:
+            tools['exec'] = {'security': 'full', 'ask': 'off'}
+            changed = True
+            print('[nikin-entrypoint] Added default treebot exec policy (full, ask off)')
+
+        fs_cfg = tools.get('fs')
+        if not isinstance(fs_cfg, dict):
+            fs_cfg = {}
+            tools['fs'] = fs_cfg
+            changed = True
+        if fs_cfg.get('workspaceOnly') is not True:
+            fs_cfg['workspaceOnly'] = True
+            changed = True
+            print('[nikin-entrypoint] Fixed treebot fs.workspaceOnly -> true')
+
+        if agent.get('subagents') != TREEBOT_SUBAGENTS:
+            agent['subagents'] = TREEBOT_SUBAGENTS
+            changed = True
+            print('[nikin-entrypoint] Applied treebot subagent allowlist')
 
 # Remove stale google-gemini-cli-auth from plugins.allow (config doctor removes it every boot anyway)
 plugins = config.get('plugins', {})
