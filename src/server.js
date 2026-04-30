@@ -19,6 +19,7 @@ import {
   fetchCurrentConfigState,
   runConfigMutation,
 } from "./lib/config-ops.js";
+import { syncGatewayTokensInConfig } from "./lib/gateway-token-sync.js";
 import { loadControlPlanePolicy } from "./lib/control-plane-policy.js";
 import {
   evaluateControlPlaneHealth,
@@ -1901,29 +1902,18 @@ const server = app.listen(PORT, "0.0.0.0", async () => {
   if (isConfigured() && OPENCLAW_GATEWAY_TOKEN) {
     console.log("[wrapper] syncing gateway tokens in config...");
     try {
-      await runCmd(
-        OPENCLAW_NODE,
-        clawArgs(["config", "set", "gateway.auth.mode", "token"]),
+      const sync = await syncGatewayTokensInConfig({
+        configPath: configPath(),
+        token: OPENCLAW_GATEWAY_TOKEN,
+        runCmd,
+        openclawNode: OPENCLAW_NODE,
+        clawArgs,
+      });
+      console.log(
+        sync.skipped
+          ? `[wrapper] gateway tokens already synced (${sync.reason}); skipping config rewrite`
+          : "[wrapper] gateway tokens synced",
       );
-      await runCmd(
-        OPENCLAW_NODE,
-        clawArgs([
-          "config",
-          "set",
-          "gateway.auth.token",
-          OPENCLAW_GATEWAY_TOKEN,
-        ]),
-      );
-      await runCmd(
-        OPENCLAW_NODE,
-        clawArgs([
-          "config",
-          "set",
-          "gateway.remote.token",
-          OPENCLAW_GATEWAY_TOKEN,
-        ]),
-      );
-      console.log("[wrapper] gateway tokens synced");
     } catch (err) {
       console.warn(`[wrapper] failed to sync gateway tokens: ${String(err)}`);
     }
