@@ -160,5 +160,41 @@ else:
 " "$CONFIG_FILE" "$WORKSPACE_DIR" 2>&1 || echo "[nikin-entrypoint] Config patch skipped (python error)"
 fi
 
+# ── Repair persisted Telegram hotfix source if present ─────────────────────
+# Some production volumes have a Telegram hotfix script persisted under /data.
+# If that script points at /openclaw/dist-runtime/extensions/telegram, it can
+# move its own source during startup and crash-loop before SSH is available.
+# Keep the persisted script pointed at the packaged OpenClaw copy for this
+# image, and restore a missing dist-runtime bundle before the wrapper starts.
+TELEGRAM_HOTFIX_SCRIPT="/data/.root/openclaw-hotfix/apply-telegram-hotfix.sh"
+TELEGRAM_HOTFIX_SRC="/openclaw/node_modules/openclaw/dist/extensions/telegram"
+TELEGRAM_RUNTIME_DST="/openclaw/dist-runtime/extensions/telegram"
+
+if [ -f "$TELEGRAM_HOTFIX_SCRIPT" ] && [ -d "$TELEGRAM_HOTFIX_SRC" ]; then
+  echo "[nikin-entrypoint] Repairing Telegram hotfix source"
+  python3 - "$TELEGRAM_HOTFIX_SCRIPT" "$TELEGRAM_HOTFIX_SRC" <<'PY' 2>&1 || echo "[nikin-entrypoint] Telegram hotfix source repair skipped"
+from pathlib import Path
+import sys
+
+script = Path(sys.argv[1])
+source = sys.argv[2]
+text = script.read_text()
+lines = text.splitlines()
+for i, line in enumerate(lines):
+    if line.startswith("SRC="):
+        lines[i] = f"SRC={source}"
+        break
+else:
+    lines.insert(0, f"SRC={source}")
+script.write_text("\n".join(lines) + "\n")
+PY
+
+  if [ ! -d "$TELEGRAM_RUNTIME_DST" ]; then
+    echo "[nikin-entrypoint] Restoring missing Telegram dist-runtime bundle"
+    mkdir -p "$(dirname "$TELEGRAM_RUNTIME_DST")"
+    cp -a "$TELEGRAM_HOTFIX_SRC" "$TELEGRAM_RUNTIME_DST"
+  fi
+fi
+
 echo "[nikin-entrypoint] Done. Handing off to: $*"
 exec "$@"
