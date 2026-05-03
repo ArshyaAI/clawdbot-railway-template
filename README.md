@@ -47,7 +47,7 @@ Optional:
 
 Notes:
 
-- This template pins OpenClaw to a released version by default via Docker build arg `OPENCLAW_GIT_REF` (override if you want `main`).
+- This template pins OpenClaw to a released version by default via Docker build arg `OPENCLAW_GIT_REF` (override if you want `main`). `OPENCLAW_GIT_REPO` defaults to `https://github.com/openclaw/openclaw.git` and can be overridden for staging-only fork or branch validation.
 
 4. Enable **Public Networking** (HTTP). Railway will assign a domain.
    - This service listens on Railway’s injected `PORT` at runtime (recommended).
