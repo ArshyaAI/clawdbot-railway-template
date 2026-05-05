@@ -19,6 +19,12 @@ set -e
 STATE_DIR="${OPENCLAW_STATE_DIR:-${CLAWDBOT_STATE_DIR:-/data/.clawdbot}}"
 WORKSPACE_DIR="${OPENCLAW_WORKSPACE_DIR:-/data/workspace}"
 INIT_DIR="/etc/nikin-config"
+SYSTEM_NODE="${OPENCLAW_SYSTEM_NODE:-/usr/local/bin/node}"
+
+if [ -x "$SYSTEM_NODE" ] && [ -z "${OPENCLAW_NODE:-}" ]; then
+  export OPENCLAW_NODE="$SYSTEM_NODE"
+  echo "[nikin-entrypoint] OPENCLAW_NODE=$OPENCLAW_NODE"
+fi
 
 echo "[nikin-entrypoint] STATE_DIR=$STATE_DIR"
 echo "[nikin-entrypoint] WORKSPACE_DIR=$WORKSPACE_DIR"
@@ -197,4 +203,9 @@ PY
 fi
 
 echo "[nikin-entrypoint] Done. Handing off to: $*"
+if [ "${1:-}" = "node" ] && [ -x "$SYSTEM_NODE" ]; then
+  shift
+  echo "[nikin-entrypoint] Bypassing persisted node wrapper: $SYSTEM_NODE $*"
+  exec "$SYSTEM_NODE" "$@"
+fi
 exec "$@"
