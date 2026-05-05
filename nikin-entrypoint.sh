@@ -19,6 +19,12 @@ set -e
 STATE_DIR="${OPENCLAW_STATE_DIR:-${CLAWDBOT_STATE_DIR:-/data/.clawdbot}}"
 WORKSPACE_DIR="${OPENCLAW_WORKSPACE_DIR:-/data/workspace}"
 INIT_DIR="/etc/nikin-config"
+SYSTEM_NODE="${OPENCLAW_SYSTEM_NODE:-/usr/local/bin/node}"
+
+if [ -x "$SYSTEM_NODE" ] && [ -z "${OPENCLAW_NODE:-}" ]; then
+  export OPENCLAW_NODE="$SYSTEM_NODE"
+  echo "[nikin-entrypoint] OPENCLAW_NODE=$OPENCLAW_NODE"
+fi
 
 echo "[nikin-entrypoint] STATE_DIR=$STATE_DIR"
 echo "[nikin-entrypoint] WORKSPACE_DIR=$WORKSPACE_DIR"
@@ -117,12 +123,32 @@ for agent in config.get('agents', {}).get('list', []):
             changed = True
             print(f'[nikin-entrypoint] Fixed nikin-assistant workspace -> {expected}')
 
-# Ensure treebot has guardrails (sandbox exec, workspace-only FS, deny dangerous tools)
+# Keep model routing on the Codex/ChatGPT OAuth provider. Direct openai/*
+# models use API-key quota and are not the desired runtime for this service.
+CODEX_MODEL = {
+    'primary': 'openai-codex/gpt-5.5',
+    'fallbacks': ['openai-codex/gpt-5.4', 'openai-codex/gpt-5.4-mini'],
+}
+for agent in config.get('agents', {}).get('list', []):
+    agent_id = agent.get('id')
+    if agent_id in ('main', 'treebot'):
+        if agent.get('model') != CODEX_MODEL:
+            agent['model'] = CODEX_MODEL
+            changed = True
+            print(f'[nikin-entrypoint] Fixed {agent_id} model -> openai-codex/gpt-5.5')
+        heartbeat = agent.get('heartbeat')
+        if isinstance(heartbeat, dict) and heartbeat.get('model') != CODEX_MODEL['primary']:
+            heartbeat['model'] = CODEX_MODEL['primary']
+            changed = True
+            print(f'[nikin-entrypoint] Fixed {agent_id} heartbeat model -> openai-codex/gpt-5.5')
+
+# Ensure treebot has guardrails that are explicit under OpenClaw 2026.4.29+.
 TREEBOT_TOOLS = {
     'profile': 'messaging',
     'alsoAllow': ['read', 'write', 'web_search', 'web_fetch', 'image',
-                  'session_status', 'sessions_send', 'sessions_spawn'],
-    'deny': ['edit', 'apply_patch', 'process', 'gateway', 'agents_list'],
+                  'tts', 'session_status', 'sessions_send', 'sessions_spawn',
+                  'subagents', 'exec', 'process', 'edit'],
+    'deny': ['apply_patch', 'gateway', 'agents_list'],
     'exec': {'security': 'full', 'ask': 'off'},
     'fs': {'workspaceOnly': True}
 }
@@ -197,4 +223,9 @@ PY
 fi
 
 echo "[nikin-entrypoint] Done. Handing off to: $*"
+if [ "${1:-}" = "node" ] && [ -x "$SYSTEM_NODE" ]; then
+  shift
+  echo "[nikin-entrypoint] Bypassing persisted node wrapper: $SYSTEM_NODE $*"
+  exec "$SYSTEM_NODE" "$@"
+fi
 exec "$@"
