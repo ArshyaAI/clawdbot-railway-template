@@ -45,6 +45,10 @@ else
       TMPL="$INIT_DIR/openclaw.config.arshya.json"
       echo "[nikin-entrypoint] Seeding from arshya template (March 7 treebot)..."
       ;;
+    nikin)
+      TMPL="$INIT_DIR/openclaw.config.nikin.json"
+      echo "[nikin-entrypoint] Seeding from NIKIN Treeki v2 template (gpt-5.5 + gemini, BigQuery, 8 plugins)..."
+      ;;
     *)
       TMPL="$INIT_DIR/openclaw.config.jsonc.tmpl"
       echo "[nikin-entrypoint] Seeding from default template..."
