@@ -247,35 +247,14 @@
     }
   },
   "gateway": {
-    "port": 8080,
     "mode": "local",
-    "bind": "lan",
-    "controlUi": {
-      "allowedOrigins": [
-        "http://localhost:8080",
-        "http://127.0.0.1:8080"
-      ],
-      "dangerouslyAllowHostHeaderOriginFallback": false,
-      "allowInsecureAuth": false
-    },
     "auth": {
-      "mode": "token",
-      "token": "${OPENCLAW_GATEWAY_TOKEN}",
-      "rateLimit": {
-        "maxAttempts": 10,
-        "windowMs": 60000,
-        "lockoutMs": 300000
-      }
+      "mode": "password",
+      "password": "${SETUP_PASSWORD}"
     },
-    "trustedProxies": [
-      "127.0.0.1"
-    ],
-    "remote": {
-      "token": "${OPENCLAW_GATEWAY_TOKEN}"
-    },
-    "tailscale": {
-      "mode": "off",
-      "resetOnExit": false
+    "controlUi": {
+      "dangerouslyAllowHostHeaderOriginFallback": true,
+      "allowInsecureAuth": false
     }
   },
   "plugins": {
