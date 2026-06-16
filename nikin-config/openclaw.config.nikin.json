@@ -263,15 +263,7 @@
       "google",
       "openai",
       "firecrawl",
-      "openclaw-mem0",
       "nikin-bigquery",
-      "nikin-meta-ads",
-      "nikin-meeting-intel",
-      "nikin-outlook",
-      "nikin-klaviyo",
-      "nikin-personal-crm",
-      "nikin-chief-of-staff",
-      "nikin-pm-intelligence",
       "acpx"
     ],
     "entries": {
@@ -289,17 +281,6 @@
       "firecrawl": {
         "enabled": true
       },
-      "openclaw-mem0": {
-        "enabled": true,
-        "config": {
-          "apiKey": "${MEM0_API_KEY}",
-          "mode": "platform",
-          "userId": "nicholas-haenny",
-          "enableGraph": true,
-          "autoRecall": true,
-          "autoCapture": true
-        }
-      },
       "nikin-bigquery": {
         "enabled": true,
         "config": {
@@ -307,56 +288,11 @@
           "dataset": "${BIGQUERY_DATASET}"
         }
       },
-      "nikin-meta-ads": {
-        "enabled": true,
-        "config": {
-          "connection_id": "${META_ADS_CONNECTION_ID}",
-          "ad_account_id": "${META_ADS_ACCOUNT_ID}",
-          "page_id": "${META_ADS_PAGE_ID}"
-        }
-      },
-      "nikin-meeting-intel": {
-        "enabled": true,
-        "config": {
-          "recall_region": "eu-central-1",
-          "bot_name": "NIKIN Notetaker",
-          "asana_connection_id": "${ASANA_CONNECTION_ID}",
-          "asana_project_id": "${ASANA_PROJECT_ID}"
-        }
-      },
-      "nikin-outlook": {
-        "enabled": true,
-        "config": {
-          "connection_id": "${OUTLOOK_CONNECTION_ID}"
-        }
-      },
-      "nikin-klaviyo": {
-        "enabled": true,
-        "config": {
-          "default_from_email": "team@nikin.ch",
-          "default_from_label": "NIKIN",
-          "connection_id": "${KLAVIYO_CONNECTION_ID}"
-        }
-      },
-      "nikin-personal-crm": {
-        "enabled": true,
-        "config": {}
-      },
-      "nikin-chief-of-staff": {
-        "enabled": true,
-        "config": {}
-      },
-      "nikin-pm-intelligence": {
-        "enabled": true,
-        "config": {}
-      },
       "acpx": {
         "enabled": true
       }
     },
-    "slots": {
-      "memory": "openclaw-mem0"
-    }
+    "slots": {}
   },
   "models": {
     "providers": {},
