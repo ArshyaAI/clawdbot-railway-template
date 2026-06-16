@@ -411,12 +411,12 @@
         ]
       },
       "google": {
-        "api": "google-generative",
+        "api": "google-generative-ai",
         "models": [
           {
             "id": "gemini-3.1-pro",
             "name": "Gemini 3.1 Pro",
-            "api": "google-generative",
+            "api": "google-generative-ai",
             "reasoning": true,
             "input": [
               "text",
